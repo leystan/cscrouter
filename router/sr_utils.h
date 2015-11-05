@@ -42,8 +42,8 @@ void print_hdr_ip(uint8_t *buf);
 void print_hdr_icmp(uint8_t *buf);
 void print_hdr_arp(uint8_t *buf);
 
-int is_valid_arp_packet(uint8_t *packet unsigned int len);
-int is_valid_ip_packet(uint8_t *packet unsigned int len);
+int is_valid_arp_packet(uint8_t *packet, unsigned int len);
+int is_valid_ip_packet(uint8_t *packet, unsigned int len);
 
 /* prints all headers, starting from eth */
 void print_hdrs(uint8_t *buf, uint32_t length);

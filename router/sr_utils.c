@@ -9,7 +9,7 @@
 /* check if the arp packet is valid
  * return 1 if valid, otherwise 0.
  */
-int is_valid_arp_packet(uint8_t *packet unsigned int len) {
+int is_valid_arp_packet(uint8_t *packet, unsigned int len) {
     int size = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 
 	struct sr_arp_hdr *arpHeader = (struct sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
@@ -31,7 +31,7 @@ int is_valid_arp_packet(uint8_t *packet unsigned int len) {
 /* check if the ip packet is valid
  * return 1 if valid, otherwise 0
  */
-int is_valid_ip_packet(uint8_t *packet unsigned int len) {
+int is_valid_ip_packet(uint8_t *packet, unsigned int len) {
 
     int size = sizeof(sr_ethernet_hdr_t) +  sizeof(sr_ip_hdr_t);
     struct sr_ip_hdr *ipHeader = (struct sr_ip_hdr *) (sizeof(struct sr_ethernet_hdr) + packet)
