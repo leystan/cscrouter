@@ -53,28 +53,6 @@ int is_valid_ip_packet(uint8_t *packet unsigned int len) {
     return 1;
 }
 
-uint32_t ip_cksum (sr_ip_hdr_t *ipHeader, int len) {
-    uint16_t current_cksum, new_cksum;
-
-    current_cksum = ipHeader->ip_sum;
-    ipHeader->ip_sum = 0;
-    new_cksum = cksum(ipHeader, len);
-    ipHeader->ip_sum = current_cksum;
-
-    return new_cksum;
-}
-
-uint32_t icmp_cksum (sr_ip_hdr_t *icmpHeader, int len) {
-    uint16_t current_cksum, new_cksum;
-
-    current_cksum = icmpHeader->icmp_sum;
-    icmpHeader->icmp_sum = 0;
-    new_cksum = cksum(icmpHeader, len);
-    icmpHeader->icmp_sum = current_cksum;
-
-    return new_cksum;
-}
-
 /******** end my helper functions *******/
 
 uint16_t cksum (const void *_data, int len) {

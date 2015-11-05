@@ -78,23 +78,22 @@ void sr_handlepacket(struct sr_instance* sr,
 
     printf("*** -> Received packet of length %d \n",len);
 
-
     sr_ethernet_hdr_t *eHeader = (sr_ethernet_hdr_t *) packet;
 
     uint16_t packageType = ntohs(eHeader->ether_type);
 
-    // Drop packet if its length is not large enough for an ethernet header
-    if (len < sizeof(struct sr_ethernet_hdr_t)) {
+    /*Drop packet if its length is not large enough for an ethernet header*/
+    if (len < sizeof(sr_ethernet_hdr_t)) {
         return;
     }
     
-    // Handle ARP packet
+    /*Handle ARP packet*/
     if (packageType == ethertype_arp) {
         if (is_valid_arp_packet(packet, len)){
             handle_arp_packet(sr, packet, len, interface)
         }
     }
-    // Handle IP packet
+    /*Handle IP packet*/
     else if (packageType == ethertype_ip) {
         if (is_valid_ip_packet(packet, len)) {
             handle_ip_packet(sr, packet, len, interface)
