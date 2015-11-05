@@ -74,4 +74,37 @@ void sr_set_ether_ip(struct sr_instance* , uint32_t );
 void sr_set_ether_addr(struct sr_instance* , const unsigned char* );
 void sr_print_if_list(struct sr_instance* );
 
+void handle_arp_packet(struct sr_instance *sr, uint8_t *packet, unsigned int len, char* interface)
+void handle_arp_request(struct sr_instance *sr,
+        struct sr_arp_hdr *arpHeader
+        struct sr_if *interface_rec)
+void handle_ip_packet(struct sr_instance *sr,
+        uint8_t *packet,
+        unsigned int len,
+        char *interface)        
+void sr_route_packet(struct sr_instance *sr,
+        uint8_t *packet,
+        struct sr_if *interface)
+void sr_send_icmp(struct sr_instance *sr,
+        uint8_t *packet,
+        uint8_t type,
+        uint8_t code)
+void sr_create_icmp(struct sr_instance *sr,
+        struct sr_ip_hdr *packet,
+        uint8_t type,
+        uint8_t code)
+void sr_create_icmp_t3(struct sr_interface *sr,
+        struct sr_ip_hdr *packet,
+        uint8_t type,
+        uint8_t code,
+        struct sr_if *interface)
+void sr_add_ethernet_header(struct sr_instance* sr,
+       uint8_t *packet;
+        unsigned int len,
+        uint32_t dest_ip,
+        uint16_t type)
+void sr_broadcast_arp(struct sr_instance *sr,
+        struct sr_arp_hdr arpHeader,
+        struct sr_if *interface)        
+
 #endif /* SR_ROUTER_H */
