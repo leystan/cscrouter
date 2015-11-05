@@ -126,6 +126,7 @@ struct sr_ip_hdr
 #define	IP_DF 0x4000			/* dont fragment flag */
 #define	IP_MF 0x2000			/* more fragments flag */
 #define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
+#define TTL_DEF 64
     uint8_t ip_ttl;			/* time to live */
     uint8_t ip_p;			/* protocol */
     uint16_t ip_sum;			/* checksum */
@@ -169,6 +170,17 @@ enum sr_arp_hrd_fmt {
   arp_hrd_ethernet = 0x0001,
 };
 
+enum sr_icmp_type {
+  icmp_echo_reply = 0,
+  icmp_unreachable = 3,
+  icmp_echo_request =8,
+  icmp_time_exceeded = 11
+};
+
+enum sr_icmp_code {
+  icmp_host_unreachable = 1,
+  icmp_port_unreachable = 3
+};
 
 struct sr_arp_hdr
 {

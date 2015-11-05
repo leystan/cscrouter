@@ -187,9 +187,9 @@ void sr_print_routing_entry(struct sr_rt* entry)
     unsigned long longest_mask = 0;
     
     while(entry){
-        // ip matches the entry address
+        /*ip matches the entry address*/
         if (((entry->mask.s_addr & entry->dest.s_addr) == (ip & entry->mask.s_addr))) {
-            // the mask is longer than the currently matched one
+            /*the mask is longer than the currently matched one*/
             if (longest_mask <= entry->mask.s_addr)) {
                 curr_match = entry;
                 longest_mask = entry->mask.s-addr;
