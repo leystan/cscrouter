@@ -6,18 +6,25 @@
 
 /****** my helper functions*****/
 
-/* check if the arp packet is valid (packet is long enough for an arp header)
+/* check if the arp packet is valid
  * return 1 if valid, otherwise 0.
  */
 int is_valid_arp_packet(uint8_t *packet unsigned int len) {
     int size = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-    //sr_ethernet_hdr_t *eHeader = (sr_ethernet_hdr_t *) packet;
-   // printf("*** -> Validating arp packet.\n");
 
+	struct sr_arp_hdr *arpHeader = (struct sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
+
+    // packet must be large enough for arp + ethernet header
     if (len < size) {
         printf("*** -> Invalid arp packet length.\n");
         return 0;
     }
+
+    // check hardware address
+    if (ntohs(arpHeader->ar_hdr) != arp_hrd_ethernet) {
+        return 0;
+    }
+
     return 1;
 }
 
@@ -34,18 +41,15 @@ int is_valid_ip_packet(uint8_t *packet unsigned int len) {
         return 0;
     }
 
-    // check that the checksum is correct
-    ip_cksum = ipHeader->ip_sum;
+    uint16_t curr_cksum = ipHeader->ip_sum;
     ipHeader->ip_sum = 0;
-
-    //
-    if (ip_cksum(ipHeader, sizeof(sr_ip))){
-
+    unint16_t new_cksum = cksum(ipHeader, ipHeader->ip_hl * 4);
+    
+    // check that the checksum is correct
+    if (new_cksum != curr_cksum) {
+        return 0;
     }
-
-
-
-
+    
     return 1;
 }
 

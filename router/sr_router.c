@@ -83,10 +83,11 @@ void sr_handlepacket(struct sr_instance* sr,
 
     uint16_t packageType = ntohs(eHeader->ether_type);
 
-    // Drop packet if its length is not enough for an ethernet header
+    // Drop packet if its length is not large enough for an ethernet header
     if (len < sizeof(struct sr_ethernet_hdr_t)) {
         return;
     }
+    
     // Handle ARP packet
     if (packageType == ethertype_arp) {
         if (is_valid_arp_packet(packet, len)){
@@ -102,11 +103,7 @@ void sr_handlepacket(struct sr_instance* sr,
 }/* end sr_ForwardPacket */
 
 /*-----------------------------------------------------
- * Method:
- * Scope:
- *
- * Handles an ARP packet
- *
+ * Handle the ARP packet
  *-----------------------------------------------------*/
 void handle_arp_packet(struct sr_instance *sr,
         uint8_t *packet
@@ -131,8 +128,7 @@ void handle_arp_packet(struct sr_instance *sr,
     // lookup entry in the cache
     arp_entry = sr_arpcache_lookup(&sr->cache, arpHeader->ar_sip)
 
-    //
-    // This ARP entry already exists. The entry must be therefore freed. (based on sr_arpcache_lookup)
+    // This ARP entry already exists. The entry must be freed.
     if (arp_entry != 0) {
         free(arp_entry);
     }
@@ -152,24 +148,28 @@ void handle_arp_packet(struct sr_instance *sr,
                         current->buf,
                         current->len,
                         ipHeader->ip_dst,
-                        1,
                         ethertype_ip);
+                current = current->next;
             }
-            current = current->next;
+            sr_arpreq_destroy(&sr->cache, arp_req);
         }
     }
 
     uint16_t opcode = ntohs(arpHeader->ar_op);
 
-    // process the request when header opcode equal to request opcode  
+    // check if it is a request
     if (opcode == arp_op_request) {
         handle_arp_request(sr, arpHeader, interface_rec);
     }
 }
 
+/*--------------------------------------------
+ * create the arp reply then send it
+ *-------------------------------------------*/
+
 void handle_arp_request(struct sr_instance *sr,
         struct sr_arp_hdr *arpHeader
-        struct sr_if *interface_rec)
+        struct sr_if *interface_rec
 {
     // Create a new ARP header for reply
     struct sr_arp_hdr arpHeader_reply;
@@ -187,19 +187,64 @@ void handle_arp_request(struct sr_instance *sr,
 
     // send the ARP header
     sr_add_ethernet_header(sr,
-            (uint8_t)&reply_arp_hdr,
+            (uint8_t) &arpHeader_reply,
             sizeof(struct sr_arp_hdr),
             arpHeader->ar_sip,
-            1,
-            ethertype_arp);
+            htons(ethertype_arp));
 }
 
 void sr_add_ethernet_header(struct sr_instance* sr,
        uint8_t *packet;
         unsigned int len,
-        uint32_t dip,
-        int send_icmp,
-        enum sr_ethertype type)
+        uint32_t dest_ip,
+        uint16_t type)
 {
-//TODO:
+    struct sr_rt *entry = sr_get_longest_match(sr, dest_ip);
+    
+    // check if there is no entry with the longest prefix match
+    if (entry == 0) {
+        send_icmp(sr, packet, icmp_unreachable, icmp_port_unreachable);
+        return 0;
+    }
+    
+    struct sr_arpentry *arp_entry = sr_arpcache_lookup(&sr->cache, entry->gw.s_addr);
+    
+    if(arp_entry != 0) {
+        unsigned int packet_len = len + sizeof(sr_header_hdr_t);
+        uint8_t *new_packet = malloc(packet_len);
+        struct sr_ethernet_hdr *eHeader = malloc(sizeof(sr_header_hdr_t));
+        struct sr_if *interface_rec = sr_get_interace(sr, entry->interace);
+        
+        //initialize ethernet header
+        eHeader->ether_type = type;
+        memcpy(eHeader->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
+        memcpy(eHeader->ether_shost, interface_rec->addr, ETHER_ADDR_LEN);
+        
+        //initialize the new packet
+        memcpy(new_packet, eHeader, sizeof(sr_ethernet_hdr_t));
+        memcpy(new_packet + sizeof(sr_ethernet_hdr_t_), packet, len);
+        
+        sr_send_packet(sr, len + sizeof(struct sr_ethernet_hdr), entry->interface);
+        
+        //clean up
+        free(new_packet);
+        free(eHeader);
+        if (arp_entry != 0) {
+            free(arp_entry)
+        }
+        //add to the request queue
+        else {
+            sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface); 
+        }
+    }  
 }
+
+
+
+
+
+
+
+
+
+
