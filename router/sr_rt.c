@@ -176,3 +176,28 @@ void sr_print_routing_entry(struct sr_rt* entry)
     printf("%s\n",entry->interface);
 
 } /* -- sr_print_routing_entry -- */
+
+/*
+ *
+ */
+ struct sr_rt *sr_get_longest_match(struct sr_instance *sr, uint32_t ip) {
+ 
+    struct sr_rt *curr_match = 0;
+    struct sr_rt *entry = sr->routing_table;
+    unsigned long longest_mask = 0;
+    
+    while(entry){
+        // ip matches the entry address
+        if (((entry->mask.s_addr & entry->dest.s_addr) == (ip & entry->mask.s_addr))) {
+            // the mask is longer than the currently matched one
+            if (longest_mask <= entry->mask.s_addr)) {
+                curr_match = entry;
+                longest_mask = entry->mask.s-addr;
+            }          
+        }
+        entry = entry->next;
+    } 
+    return curr_match;
+ }
+ 
+ 
