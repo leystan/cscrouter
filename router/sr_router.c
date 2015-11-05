@@ -419,6 +419,37 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     }  
 }
 
+void sr_broadcast_arp(struct sr_instance *sr,
+        struct sr_arp_hdr arpHeader,
+        struct sr_if *interface)
+{
+    struct sr_rt *entry = sr_get_longest_match(sr, arpHeader.ar_tip);
+    // drop the packet if the entry is not there
+    if(entry == 0) {
+        return;
+    }
+    // new packet
+    uint8_t *packet;
+    
+    // initialize the packet
+    struct sr_ethernet_hdr eHeader;
+    unsigned int len = sizeof(ar_arp_hdr_t) + sizeof(sr_ethernet_hdr_t);
+    eHeader.ether_type = htons(ethertype_arp);
+    memset(eHeader.ether_dhost, 255, ETHER_ADDR_LEN);
+    memcpy(eHeader.ether_shost, interface->addr, ETHER_ADDR_LEN);
+    
+    packet = malloc(len);
+    memcpy(packet, &eHeader, sizeof(sr_ethernet_hdr_t));
+    memcpy(packet + sizeof(sr_ethernet_hdr_t), &arpHeader, sizeof(sr_arp_hdr_t));
+    
+    sr_send_packet(sr, packet, len, entry->interface);
+    
+    // clean up
+    free(packet);
+}
+
+
+
 
 
 

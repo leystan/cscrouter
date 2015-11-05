@@ -17,7 +17,49 @@
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    /* Fill this in */
+    
+    struct sr_arpreq *curr_req = sr->cache.requests;
+    
+    while(curr_req) {
+        handle_arpreq(sr, curr_req);
+        curr_req = curr_req->next;
+    }
+}
+
+void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
+  
+    if(difftime(time(0), req->sent) > 1.0) {
+        // if sent more than 5 times, send icmp host unreachable
+        if(req->times_sent >= 5) {
+            struct sr_packet *packet = req->packets;
+            while(packet) {
+                sr_send_icmp(sr, packet->buf, icmp_unreachable, icmp_host_unreachable);
+            }
+            sr_arpreq_destroy(&sr->cache, req);
+        }
+        else {
+            send_arp_req(sr, req);
+            req->sent = time(0);
+            req->times_sent = req->times_sent + 1;
+        }
+    }
+}
+
+void send_arp_req(struct sr_instance *sr, struct sr_arpreq *req) {
+    struct sr_arp_hdr new_req;
+    struct sr_if *interface_rec = sr_get_interface(sr, req->packets->iface);
+    
+    //initialize the new request
+    new_req.ar_hrd = htons(arp_hrd_ethernet);
+    new_req.ar_pro = htons(ethertype_ip);
+    new_req.ar_hln = ETHER_ADDR_LEN;
+    new_req.ar_pln = sizeof(uint32_t);
+    new_req.ar_op = htons(arp_op_request);
+    memcpy(new_req.ar_sha, interface_rec->addr, ETHER_ADDR_LEN);
+    new_req.ar_sip = interface_rec->ip;
+    new_req.ar_tip = req->ip;
+    
+    sr_broadcast_arp(sr,new_req, interface_rec);
 }
 
 /* You should not need to touch the rest of this code. */
