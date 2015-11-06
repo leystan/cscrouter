@@ -133,6 +133,7 @@ void handle_arp_packet(struct sr_instance *sr,
     }
     /*This ARP entry does not exist*/
     else {
+        printf("inserting into arpcache\n");
         arp_request = sr_arpcache_insert(&sr->cache, arpHeader->ar_sha, arpHeader->ar_sip);
 
         /*send packets that are waiting on this ARP request*/
@@ -141,7 +142,9 @@ void handle_arp_packet(struct sr_instance *sr,
 
             while (packet != 0) {
                 struct sr_ip_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
+                printf("Resending queued requests!!!\n");
                 sr_add_ethernet_header(sr, packet->buf, packet->len, ipHeader->ip_dst, htons(ethertype_ip));
+                packet = packet->next;
             }
             sr_arpreq_destroy(&sr->cache, arp_request);
         }
@@ -377,6 +380,8 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     /*check if there is no entry with the longest prefix match*/
     if (entry == 0) {
         sr_send_icmp(sr, packet, icmp_unreachable, icmp_port_unreachable);
+        printf("failed to find target IP: ");
+        print_addr_ip_int(dest_ip);
         return;
     }
     
