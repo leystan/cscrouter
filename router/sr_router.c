@@ -247,12 +247,14 @@ void sr_route_packet(struct sr_instance *sr,
         return;
     }
     
+    unsigned int len = ntohs(ipHeader->ip_len);
+    
     /*recalculate the checksums*/
     ipHeader->ip_sum = 0;
     ipHeader->ip_sum = cksum(ipHeader, ipHeader->ip_hl * 4);
     
     /*create a new packet*/
-    unsigned int len = ntohs(ipHeader->ip_len);
+
     uint8_t *new_packet = malloc(len);
     memcpy(new_packet, ipHeader, len);
     sr_add_ethernet_header(sr, new_packet, len, ipHeader->ip_dst, htons(ethertype_ip));
