@@ -249,7 +249,7 @@ void sr_route_packet(struct sr_instance *sr,
     /*create a new packet*/
     unsigned int len = ntohs(ipHeader->ip_len);
     uint8_t *new_packet = malloc(len);
-    memcpy(new_packet, ipHeader, ntohs(ipHeader->ip_len));
+    memcpy(new_packet, ipHeader, len);
     sr_add_ethernet_header(sr, new_packet, len, ipHeader->ip_dst, htons(ethertype_ip));
     
     /*clean up*/

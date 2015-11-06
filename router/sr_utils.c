@@ -33,11 +33,15 @@ int is_valid_arp_packet(uint8_t *packet, unsigned int len) {
  */
 int is_valid_ip_packet(uint8_t *packet, unsigned int len) {
 
-    int size = sizeof(sr_ethernet_hdr_t) +  sizeof(sr_ip_hdr_t);
-    struct sr_ip_hdr *ipHeader = (struct sr_ip_hdr *) (sizeof(struct sr_ethernet_hdr) + packet);
+    int size = sizeof(struct sr_ethernet_hdr) +  sizeof(struct sr_ip_hdr);
+    struct sr_ip_hdr *ipHeader = (struct sr_ip_hdr *) (sizeof(sr_ethernet_hdr_t) + packet);
 
     /*packet length must be long enough to hold both the ethernet header and the ip header*/
     if (len < size) {
+        return 0;
+    }
+    
+    if (len != sizeof(struct sr_ethernet_hdr) + ntohs(ipHeader->ip_len)) {
         return 0;
     }
 
