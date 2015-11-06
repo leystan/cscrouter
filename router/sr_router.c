@@ -116,8 +116,6 @@ void handle_arp_packet(struct sr_instance *sr,
         unsigned int len,
         char* interface)
 {
-    printf("*** -> Handling ARP packet. The ARP header is:\n");
-    print_hdr_arp(packet + sizeof(sr_ethernet_hdr_t));
 
     struct sr_arpentry *arp_entry;
     struct sr_arpreq *arp_request;
@@ -133,7 +131,7 @@ void handle_arp_packet(struct sr_instance *sr,
     }
     /*This ARP entry does not exist*/
     else {
-        printf("inserting into arpcache\n");
+    
         arp_request = sr_arpcache_insert(&sr->cache, arpHeader->ar_sha, arpHeader->ar_sip);
 
         /*send packets that are waiting on this ARP request*/
@@ -142,7 +140,7 @@ void handle_arp_packet(struct sr_instance *sr,
 
             while (packet != 0) {
                 struct sr_ip_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
-                printf("Resending queued requests!!!\n");
+                
                 sr_add_ethernet_header(sr, packet->buf, packet->len, ipHeader->ip_dst, htons(ethertype_ip));
                 packet = packet->next;
             }
@@ -193,7 +191,6 @@ void handle_ip_packet(struct sr_instance *sr,
         unsigned int len,
         char *interface)
 {
-    printf("handling ip packet\n");
     struct sr_if* interface_rec;
     struct sr_ip_hdr *ipHeader;
     
@@ -201,7 +198,6 @@ void handle_ip_packet(struct sr_instance *sr,
     interface_rec = sr_get_interface(sr, interface);
     
     if (ipHeader->ip_dst != interface_rec->ip) {
-        printf("routing packet\n");
         sr_route_packet(sr, packet, interface_rec);
     }
     else {
@@ -220,7 +216,6 @@ void handle_ip_packet(struct sr_instance *sr,
             if (curr_cksum != new_cksum) {
                 return;
             }
-            printf("sending icmp_ehco_reply!\n");
             sr_send_icmp(sr, (uint8_t *) ipHeader, icmp_echo_reply, 0);
         }
         /*port is not reachable*/
@@ -242,7 +237,6 @@ void sr_route_packet(struct sr_instance *sr,
     
     /*the icmp time to live has been exeeded -- send time exceeded*/
     if (ttl == 0) {
-        printf("Time exceeded, sending ICMP back\n");
         sr_send_icmp(sr, (uint8_t *) ipHeader, icmp_time_exceeded, 0);
         return;
     }
@@ -257,7 +251,7 @@ void sr_route_packet(struct sr_instance *sr,
 
     uint8_t *new_packet = malloc(len);
     memcpy(new_packet, ipHeader, len);
-    printf("exec add_ethernet\n");
+    
     sr_add_ethernet_header(sr, new_packet, len, ipHeader->ip_dst, htons(ethertype_ip));
     
     /*clean up*/
@@ -385,8 +379,6 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     /*check if there is no entry with the longest prefix match*/
     if (entry == 0) {
         sr_send_icmp(sr, packet, icmp_unreachable, icmp_port_unreachable);
-        printf("failed to find target IP: ");
-        print_addr_ip_int(dest_ip);
         return;
     }
     
@@ -407,10 +399,6 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         memcpy(new_packet, eHeader, sizeof(sr_ethernet_hdr_t));
         memcpy(new_packet + sizeof(sr_ethernet_hdr_t), packet, len);
         
-        printf("sending packet\n");
-        printf("###########################################\n");
-        print_hdrs(new_packet, packet_len);
-        
         sr_send_packet(sr, new_packet, len + sizeof(struct sr_ethernet_hdr), entry->interface);
         
         /*clean up*/
@@ -422,7 +410,6 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     }    
     /*add to the request queue*/   
     else {
-        print_hdr_ip(packet);
         sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface);
     }  
 }
