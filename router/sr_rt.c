@@ -190,9 +190,9 @@ void sr_print_routing_entry(struct sr_rt* entry)
         /*ip matches the entry address*/
         if (((entry->mask.s_addr & entry->dest.s_addr) == (ip & entry->mask.s_addr))) {
             /*the mask is longer than the currently matched one*/
-            if (longest_mask <= entry->mask.s_addr)) {
+            if (longest_mask <= entry->mask.s_addr) {
                 curr_match = entry;
-                longest_mask = entry->mask.s-addr;
+                longest_mask = entry->mask.s_addr;
             }          
         }
         entry = entry->next;

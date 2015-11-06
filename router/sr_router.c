@@ -316,16 +316,24 @@ void sr_create_icmp(struct sr_instance *sr,
     icmpHeader->icmp_sum = 0;
     uint16_t new_cksum = cksum((uint8_t *) icmpHeader, ntohs(ipHeader->ip_len) - ipHeader->ip_hl *4);
     icmpHeader->icmp_sum = new_cksum;
-    
+
     /*initialize ip header*/
     uint32_t dest = ipHeader->ip_src;
     ipHeader->ip_src = ipHeader->ip_dst;
-    icmpHeader->icmp_type = type;
-    icmpHeader->icmp_code = code;
-    icmpHeader->icmp_sum = 0;
+    ipHeader->ip_dst = dest;
+    /*calculate the checksum*/
+    ipHeader->ip_sum = 0;
+    ipHeader->ip_sum = cksum(ipHeader, ipHeader->ip_hl * 4);
 
+    unsigned int len = ntohs(ipHeader->ip_len);
+    uint8_t *new_packet = malloc(len);
+    memcpy(new_packet, ipHeader, len);
+
+    sr_add_ethernet_header(sr, new_packet, len, dest, htons(ethertype_ip));
+
+    /*clean up*/
+    free(new_packet);
 }
-
 
 /*
  *
@@ -334,29 +342,22 @@ void sr_create_icmp_t3(struct sr_instance *sr,
         struct sr_ip_hdr *packet,
         uint8_t type,
         uint8_t code,
-        struct sr_if *interface,
-		unsigned int len,
-		uint8_t *new_packet)
+        struct sr_if *interface)
 {
-    struct sr_ip_hdr *ipHeader = packet;
-    struct sr_icmp_hdr *icmpHeader = (sr_icmp_hdr_t *)((uint8_t *)(ipHeader) + (ipHeader->ip_hl *4));
-    
-    /*initialize icmp header*/
-    icmpHeader->icmp_type = type;
-    icmpHeader->icmp_code = code;
-    /*calculate the checksum*/
-    icmpHeader->icmp_sum = 0;
-    uint16_t new_cksum = cksum((uint8_t *) icmpHeader, ntohs(ipHeader->ip_len) - ipHeader->ip_hl *4);
-    icmpHeader->icmp_sum = new_cksum;
-    
-    /*initialize ip header*/
-    uint32_t dest = ipHeader->ip_src;
-    ipHeader->ip_src = ipHeader->ip_dst;
+    struct sr_icmp_t3_hdr *icmpHeader;
+    struct sr_ip_hdr *ipHeader;
+
+    unsigned int len = sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+
+    uint8_t *new_packet = malloc(len);
+    icmpHeader = (sr_icmp_t3_hdr_t *) ((uint8_t *) new_packet + sizeof(sr_ip_hdr_t));
+    ipHeader = (sr_ip_hdr_t *) new_packet;
+
     icmpHeader->icmp_type = type;
     icmpHeader->icmp_code = code;
     icmpHeader->icmp_sum = 0;
     memcpy((uint8_t *) icmpHeader + sizeof(sr_icmp_t3_hdr_t) - ICMP_DATA_SIZE, packet, ICMP_DATA_SIZE);
-    
+
     /*initialize ip header*/
     ipHeader->ip_hl = 5;
     ipHeader->ip_v = 4;
@@ -370,17 +371,17 @@ void sr_create_icmp_t3(struct sr_instance *sr,
     ipHeader->ip_sum = 0;
     ipHeader->ip_len = htons(len);
     ipHeader->ip_sum = cksum(ipHeader, sizeof(sr_ip_hdr_t));
-    
+
     icmpHeader->icmp_sum = cksum(new_packet + sizeof(sr_ip_hdr_t), sizeof(sr_icmp_t3_hdr_t));
-    
+
     sr_add_ethernet_header(sr, new_packet, len, ipHeader->ip_dst, htons(ethertype_ip));
-    
+
     /*clean up*/
     free(new_packet);
 }
 
 void sr_add_ethernet_header(struct sr_instance* sr,
-       uint8_t *packet,
+        uint8_t *packet,
         unsigned int len,
         uint32_t dest_ip,
         uint16_t type)
@@ -390,15 +391,15 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     /*check if there is no entry with the longest prefix match*/
     if (entry == 0) {
         sr_send_icmp(sr, packet, icmp_unreachable, icmp_port_unreachable);
-        return 0;
+        return;
     }
     
     struct sr_arpentry *arp_entry = sr_arpcache_lookup(&sr->cache, entry->gw.s_addr);
     
     if(arp_entry != 0) {
-        unsigned int packet_len = len + sizeof(sr_header_hdr_t); //undeclared sr_header_hdr_t
+        unsigned int packet_len = len + sizeof(sr_ethernet_hdr_t);
         uint8_t *new_packet = malloc(packet_len);
-        struct sr_ethernet_hdr *eHeader = malloc(sizeof(sr_header_hdr_t)); //undeclared sr_header_hdr_t
+        struct sr_ethernet_hdr *eHeader = malloc(sizeof(sr_ethernet_hdr_t));
         struct sr_if *interface_rec = sr_get_interface(sr, entry->interface);
         
         /*initialize ethernet header*/
@@ -439,7 +440,7 @@ void sr_broadcast_arp(struct sr_instance *sr,
     
     /*initialize the packet*/
     struct sr_ethernet_hdr eHeader;
-    unsigned int len = sizeof(ar_arp_hdr_t) + sizeof(sr_ethernet_hdr_t);  //undeclared ar_arp_hdr_t
+    unsigned int len = sizeof(sr_arp_hdr_t) + sizeof(sr_ethernet_hdr_t);
     eHeader.ether_type = htons(ethertype_arp);
     memset(eHeader.ether_dhost, 255, ETHER_ADDR_LEN);
     memcpy(eHeader.ether_shost, interface->addr, ETHER_ADDR_LEN);
@@ -452,17 +453,5 @@ void sr_broadcast_arp(struct sr_instance *sr,
     
     /*clean up*/
     free(packet);
-    ipHeader->ip_dst = dest;
-    /*calculate the checksum*/
-    ipHeader->ip_sum = 0;
-    ipHeader->ip_sum = cksum(ipHeader, ipHeader->ip_hl * 4);
-    
-    uint8_t *new_packet = malloc(ntohs(ipHeader->ip_len));
-    memcpy(new_packet, ipHeader, ntohs(ipHeader->ip_len))
-    
-    sr_add_ethernet_header(sr, new_packet, len, dest, htons(ethertype_ip));
-    
-    /*clean up*/
-    free(new_packet);   
 }
 

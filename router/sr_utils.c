@@ -12,16 +12,16 @@
 int is_valid_arp_packet(uint8_t *packet, unsigned int len) {
     int size = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 
-	struct sr_arp_hdr *arpHeader = (struct sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
+    struct sr_arp_hdr *arpHeader = (struct sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
 
-    // packet must be large enough for arp + ethernet header
+    /*packet must be large enough for arp + ethernet header*/
     if (len < size) {
         printf("*** -> Invalid arp packet length.\n");
         return 0;
     }
 
-    // check hardware address
-    if (ntohs(arpHeader->ar_hdr) != arp_hrd_ethernet) {
+    /*check hardware address*/
+    if (ntohs(arpHeader->ar_hrd) != arp_hrd_ethernet) {
         return 0;
     }
 
@@ -34,18 +34,18 @@ int is_valid_arp_packet(uint8_t *packet, unsigned int len) {
 int is_valid_ip_packet(uint8_t *packet, unsigned int len) {
 
     int size = sizeof(sr_ethernet_hdr_t) +  sizeof(sr_ip_hdr_t);
-    struct sr_ip_hdr *ipHeader = (struct sr_ip_hdr *) (sizeof(struct sr_ethernet_hdr) + packet)
+    struct sr_ip_hdr *ipHeader = (struct sr_ip_hdr *) (sizeof(struct sr_ethernet_hdr) + packet);
 
-    // packet length must be long enough to hold both the ethernet header and the ip header
+    /*packet length must be long enough to hold both the ethernet header and the ip header*/
     if (len < size) {
         return 0;
     }
 
     uint16_t curr_cksum = ipHeader->ip_sum;
     ipHeader->ip_sum = 0;
-    unint16_t new_cksum = cksum(ipHeader, ipHeader->ip_hl * 4);
+    uint16_t new_cksum = cksum(ipHeader, ipHeader->ip_hl * 4);
     
-    // check that the checksum is correct
+    /*check that the checksum is correct*/
     if (new_cksum != curr_cksum) {
         return 0;
     }
