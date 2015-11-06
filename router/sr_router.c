@@ -406,7 +406,7 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         
         printf("sending packet\n");
         printf("###########################################\n");
-        print_hdrs(new_packet, packet_length);
+        print_hdrs(new_packet, packet_len);
         
         sr_send_packet(sr, new_packet, len + sizeof(struct sr_ethernet_hdr), entry->interface);
         
@@ -416,10 +416,11 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         if (arp_entry != 0) {
             free(arp_entry);
         }
-        /*add to the request queue*/
-        printf("adding to req queue\n");
-        print_hdr_ip(packet);
+        
+        /*add to the request queue*/   
         else {
+            printf("adding to req queue\n");
+            print_hdr_ip(packet);
             sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface); 
         }
     }  
@@ -449,10 +450,10 @@ void sr_broadcast_arp(struct sr_instance *sr,
     memcpy(packet + sizeof(sr_ethernet_hdr_t), &arpHeader, sizeof(sr_arp_hdr_t));
     
     
-  print_hdr_arp((uint8_t * ) arp_hdr); 
-  printf("boardcasting arp packet\n");
-  printf("###########################################\n");
-  print_hdrs(packet, len);
+      
+      printf("boardcasting arp packet\n");
+      printf("###########################################\n");
+      print_hdrs(packet, len);
     
     sr_send_packet(sr, packet, len, entry->interface);
     
