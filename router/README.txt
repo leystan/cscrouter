@@ -20,7 +20,7 @@ The assignment can be easily split into two main parts, handling ARP packets and
 	     
 DESIGN DECISIONS:
 
-Nothing out of the ordinay, just basic decisions to make things more clear.
+Nothing out of the ordinary, just basic decisions to make things more clear.
 
    - defining different global variables in coresponding header files to make things clear/managable
      -> defining the default TTL
