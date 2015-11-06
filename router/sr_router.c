@@ -201,6 +201,7 @@ void handle_ip_packet(struct sr_instance *sr,
     interface_rec = sr_get_interface(sr, interface);
     
     if (ipHeader->ip_dst != interface_rec->ip) {
+        printf("routing packet\n");
         sr_route_packet(sr, packet, interface_rec);
     }
     else {
@@ -219,7 +220,7 @@ void handle_ip_packet(struct sr_instance *sr,
             if (curr_cksum != new_cksum) {
                 return;
             }
-            
+            printf("sending icmp_ehco_reply!\n");
             sr_send_icmp(sr, (uint8_t *) ipHeader, icmp_echo_reply, 0);
         }
         /*port is not reachable*/
@@ -241,6 +242,7 @@ void sr_route_packet(struct sr_instance *sr,
     
     /*the icmp time to live has been exeeded -- send time exceeded*/
     if (ttl == 0) {
+        printf("Time exceeded, sending ICMP back\n");
         sr_send_icmp(sr, (uint8_t *) ipHeader, icmp_time_exceeded, 0);
         return;
     }
@@ -402,6 +404,10 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         memcpy(new_packet, eHeader, sizeof(sr_ethernet_hdr_t));
         memcpy(new_packet + sizeof(sr_ethernet_hdr_t), packet, len);
         
+        printf("sending packet\n");
+        printf("###########################################\n");
+        print_hdrs(new_packet, packet_length);
+        
         sr_send_packet(sr, new_packet, len + sizeof(struct sr_ethernet_hdr), entry->interface);
         
         /*clean up*/
@@ -411,6 +417,8 @@ void sr_add_ethernet_header(struct sr_instance* sr,
             free(arp_entry);
         }
         /*add to the request queue*/
+        printf("adding to req queue\n");
+        print_hdr_ip(packet);
         else {
             sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface); 
         }
@@ -439,6 +447,12 @@ void sr_broadcast_arp(struct sr_instance *sr,
     packet = malloc(len);
     memcpy(packet, &eHeader, sizeof(sr_ethernet_hdr_t));
     memcpy(packet + sizeof(sr_ethernet_hdr_t), &arpHeader, sizeof(sr_arp_hdr_t));
+    
+    
+  print_hdr_arp((uint8_t * ) arp_hdr); 
+  printf("boardcasting arp packet\n");
+  printf("###########################################\n");
+  print_hdrs(packet, len);
     
     sr_send_packet(sr, packet, len, entry->interface);
     
