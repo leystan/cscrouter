@@ -116,20 +116,13 @@ void handle_arp_packet(struct sr_instance *sr,
         unsigned int len,
         char* interface)
 {
-    struct sr_if* interface_rec;
     struct sr_arpentry *arp_entry;
     struct sr_arpreq *arp_request;
 
     printf("*** -> Handling ARP packet. The ARP header is:\n");
     print_hdr_arp(packet + sizeof(sr_ethernet_hdr_t));
 
-    sr_arp_hdr_t *arpHeader = (sr_arp_hdr_t *) (packet + sizeof(sr_ethernet_hdr_t));
-    interface_rec = sr_get_interface(sr, interface);
-
-    /*drop packet if interface ip does not match packet header ip*/
-    if (interface_rec->ip != arpHeader->ar_tip){
-        return;
-    }
+    sr_arp_hdr_t *arpHeader = (sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
 
     /*lookup entry in the cache*/
     arp_entry = sr_arpcache_lookup(&sr->cache, arpHeader->ar_sip);
@@ -144,18 +137,11 @@ void handle_arp_packet(struct sr_instance *sr,
 
         /*send packets that are waiting on this ARP request*/
         if (arp_request != 0) {
-            struct sr_packet *current;
-            struct sr_ip_hdr *ipHeader;
+            struct sr_packet *packet = arp_request->packets;
 
-            current = arp_request->packets;
-            while (current != 0) {
-                ipHeader = (struct sr_ip_hdr *)current->buf;
-                sr_add_ethernet_header(sr,
-                        current->buf,
-                        current->len,
-                        ipHeader->ip_dst,
-                        ethertype_ip);
-                current = current->next;
+            while (packet!= 0) {
+                struct sr_up_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
+                sr_add_ethernet_header(sr, packet->buf, packet->len, ipHeader->ip_dst, htons(ethertype_ip));
             }
             sr_arpreq_destroy(&sr->cache, arp_request);
         }
