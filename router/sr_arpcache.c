@@ -40,7 +40,7 @@ void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
         else {
             send_arp_req(sr, req);
             req->sent = time(0);
-            req->times_sent = req->times_sent + 1;
+            req->times_sent++;
         }
     }
 }

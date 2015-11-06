@@ -238,7 +238,7 @@ void sr_route_packet(struct sr_instance *sr,
     
     /*decrement the ttl*/
     uint8_t ttl = ipHeader->ip_ttl;
-    ttl = ttl - 1;
+    ttl--;
     
     /*the icmp time to live has been exeeded -- send time exceeded*/
     if (ttl == 0) {
