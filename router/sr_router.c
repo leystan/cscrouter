@@ -139,7 +139,7 @@ void handle_arp_packet(struct sr_instance *sr,
         if (arp_request != 0) {
             struct sr_packet *packet = arp_request->packets;
 
-            while (packet!= 0) {
+            while (packet != 0) {
                 struct sr_ip_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
                 sr_add_ethernet_header(sr, packet->buf, packet->len, ipHeader->ip_dst, htons(ethertype_ip));
             }
@@ -180,7 +180,7 @@ void handle_arp_request(struct sr_instance *sr,
     /*send the ARP header*/
     sr_add_ethernet_header(sr,
             (uint8_t *) &arpHeader_reply,
-            sizeof(struct sr_arp_hdr),
+            sizeof(sr_arp_hdr_t),
             arpHeader->ar_sip,
             htons(ethertype_arp));
 }
