@@ -221,7 +221,7 @@ void handle_ip_packet(struct sr_instance *sr,
         }
         /*port is not reachable*/
         else {
-            return;
+            printf("the port is not reachable");
         }
     }
 }
@@ -262,7 +262,7 @@ void sr_send_icmp(struct sr_instance *sr,
         uint8_t code)
 {
     if (type == icmp_unreachable){
-        return;
+       
     }
     
     else if (type == icmp_time_exceeded) {
