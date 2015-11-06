@@ -397,7 +397,7 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         memcpy(new_packet, eHeader, sizeof(sr_ethernet_hdr_t));
         memcpy(new_packet + sizeof(sr_ethernet_hdr_t), packet, len);
         
-        sr_send_packet(sr, packet, len + sizeof(struct sr_ethernet_hdr), entry->interface);
+        sr_send_packet(sr, new_packet, len + sizeof(struct sr_ethernet_hdr), entry->interface);
         
         /*clean up*/
         free(new_packet);
