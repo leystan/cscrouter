@@ -29,7 +29,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 void handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req) {
   
     if(difftime(time(0), req->sent) > 1.0) {
-        // if sent more than 5 times, send icmp host unreachable
+        /*if sent more than 5 times, send icmp host unreachable*/
         if(req->times_sent >= 5) {
             struct sr_packet *packet = req->packets;
             while(packet) {
@@ -49,7 +49,7 @@ void send_arp_req(struct sr_instance *sr, struct sr_arpreq *req) {
     struct sr_arp_hdr new_req;
     struct sr_if *interface_rec = sr_get_interface(sr, req->packets->iface);
     
-    //initialize the new request
+    /*initialize the new request*/
     new_req.ar_hrd = htons(arp_hrd_ethernet);
     new_req.ar_pro = htons(ethertype_ip);
     new_req.ar_hln = ETHER_ADDR_LEN;
@@ -285,20 +285,4 @@ void *sr_arpcache_timeout(void *sr_ptr) {
     }
     
     return NULL;
-}
-
-/* Find an IP->MAC mapping in the cache and resets the entry*
- * returns 1 if successful, otherwise 0.
- * returns 1 if successful, otherwise 0.
-/
-int sr_arpcache_refresh(struct sr_arpcache *cache, uint32_t ip) {
-    struct sr_arpentry *entry = NULL;
-    int i;
-
-    for (i = 0; i < SR_ARPCACHE_SZ; i++){
-        if((cache->entries[i].valid) && cache->entries[i].ip == ip) {
-            entry = &(cache->entries[i]);
-            break;
-        }
-    }
 }
