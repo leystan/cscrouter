@@ -116,13 +116,13 @@ void handle_arp_packet(struct sr_instance *sr,
         unsigned int len,
         char* interface)
 {
-    struct sr_arpentry *arp_entry;
-    struct sr_arpreq *arp_request;
-
     printf("*** -> Handling ARP packet. The ARP header is:\n");
     print_hdr_arp(packet + sizeof(sr_ethernet_hdr_t));
 
-    sr_arp_hdr_t *arpHeader = (sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
+    struct sr_arpentry *arp_entry;
+    struct sr_arpreq *arp_request;
+    struct sr_arp_hdr *arpHeader = (struct sr_arp_hdr *) (packet + sizeof(sr_ethernet_hdr_t));
+    struct sr_if *interface_rec = sr_get_interface(sr, interface);
 
     /*lookup entry in the cache*/
     arp_entry = sr_arpcache_lookup(&sr->cache, arpHeader->ar_sip);
@@ -140,7 +140,7 @@ void handle_arp_packet(struct sr_instance *sr,
             struct sr_packet *packet = arp_request->packets;
 
             while (packet!= 0) {
-                struct sr_up_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
+                struct sr_ip_hdr *ipHeader = (sr_ip_hdr_t *) packet->buf;
                 sr_add_ethernet_header(sr, packet->buf, packet->len, ipHeader->ip_dst, htons(ethertype_ip));
             }
             sr_arpreq_destroy(&sr->cache, arp_request);
