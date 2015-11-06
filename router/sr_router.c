@@ -422,7 +422,6 @@ void sr_add_ethernet_header(struct sr_instance* sr,
     }    
     /*add to the request queue*/   
     else {
-        printf("adding to req queue\n");
         print_hdr_ip(packet);
         sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface);
     }  
@@ -450,12 +449,6 @@ void sr_broadcast_arp(struct sr_instance *sr,
     packet = malloc(len);
     memcpy(packet, &eHeader, sizeof(sr_ethernet_hdr_t));
     memcpy(packet + sizeof(sr_ethernet_hdr_t), &arpHeader, sizeof(sr_arp_hdr_t));
-    
-    
-      
-      printf("boardcasting arp packet\n");
-      printf("###########################################\n");
-      print_hdrs(packet, len);
     
     sr_send_packet(sr, packet, len, entry->interface);
     
