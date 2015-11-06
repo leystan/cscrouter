@@ -33,7 +33,7 @@
 #include "sr_router.h"
 #include "sr_rt.h"
 
-extern char* optarg;
+extern char* optarg; // I get this warning: ‘optarg’ redeclared without dllimport attribute: previous dllimport ignored [-Wattributes] when I call make.
 
 /*-----------------------------------------------------------------------------
  *---------------------------------------------------------------------------*/
