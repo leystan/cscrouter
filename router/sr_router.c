@@ -193,7 +193,7 @@ void handle_ip_packet(struct sr_instance *sr,
         unsigned int len,
         char *interface)
 {
-    
+    printf("handling ip packet\n");
     struct sr_if* interface_rec;
     struct sr_ip_hdr *ipHeader;
     
@@ -257,6 +257,7 @@ void sr_route_packet(struct sr_instance *sr,
 
     uint8_t *new_packet = malloc(len);
     memcpy(new_packet, ipHeader, len);
+    printf("exec add_ethernet\n");
     sr_add_ethernet_header(sr, new_packet, len, ipHeader->ip_dst, htons(ethertype_ip));
     
     /*clean up*/
@@ -418,13 +419,12 @@ void sr_add_ethernet_header(struct sr_instance* sr,
         if (arp_entry != 0) {
             free(arp_entry);
         }
-        
-        /*add to the request queue*/   
-        else {
-            printf("adding to req queue\n");
-            print_hdr_ip(packet);
-            sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface); 
-        }
+    }    
+    /*add to the request queue*/   
+    else {
+        printf("adding to req queue\n");
+        print_hdr_ip(packet);
+        sr_arpcache_queuereq(&sr->cache, entry->gw.s_addr, packet, len, entry->interface);
     }  
 }
 
